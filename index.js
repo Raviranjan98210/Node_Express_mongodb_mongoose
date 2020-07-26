@@ -4,6 +4,7 @@ mongoose
   .connect("mongodb://localhost/playground", {
     useUnifiedTopology: true,
     useNewUrlParser: true,
+    useFindAndModify: false,
   })
   .then(() => console.log("Connected to mongodb"))
   .catch((err) => console.error("Mongodb is not connected", err));
@@ -78,6 +79,45 @@ async function regExQuery() {
   console.log(result);
 }
 
+async function updateCourse(id) {
+  //Method-1 > 1.Query first
+  //2. get the result then update them
+  // print the update value
+
+  // const course = await Course.findById(id);
+  // if (!course) return;
+  // course.author = "Ravi Ranjan Kumar";
+  // course.price = 40;
+
+  // const result = await course.save();
+  // console.log(result);
+
+  // Method-2 > Update the value first then log them out
+
+  const result = await Course.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        name: "Mern stack by Brad Traversy",
+        author: "Brad Traversy",
+      },
+    },
+    { new: true }
+  );
+  console.log(result);
+}
+
+async function deleteCourse(id) {
+  //Method-1
+  // const result = await Course.deleteOne({ _id: id }); // we can deleteMany() to delete many documents by using filter object
+  // console.log(result);
+
+  //Method-2
+
+  const course = await Course.findByIdAndRemove(id);
+  console.log(`${course.name} course is deleted.`);
+}
+
 const course = {
   name: "Mevn stack",
   author: "Brad Traversy",
@@ -90,4 +130,7 @@ const course = {
 // getCourses();
 // queryCourse();
 // advQuery();
-regExQuery();
+// regExQuery();
+// updateCourse("5f1716f395032a292ebcef41");
+// deleteCourse("5f1716f395032a292ebcef41");
+deleteCourse("5f171d5effc51f2ab79a50a2");
