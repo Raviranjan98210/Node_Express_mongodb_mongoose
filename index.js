@@ -8,26 +8,66 @@ mongoose
   .then(() => console.log("Connected to mongodb"))
   .catch((err) => console.error("Mongodb is not connected", err));
 
-//   Creating schema for the course
+//***********************************************Creating schema with proper validation************************************************************** */
+
 const courseSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength: 100,
+    // match: /pattern/ we can put regex as well
+  },
+  category: {
+    type: String,
+    enum: ["web", "mobile", "novel", "android"], // it enables to choose only mentioned category otherwise it will throw an error
+    required: true,
+    lowercase: true,
+  },
   author: String,
-  tags: [String],
+  tags: {
+    type: Array,
+    // required: true,
+    validate: {
+      validator: function (v) {
+        return v && v.length > 0;
+      },
+      message: "A course should have at least one tag",
+    },
+  },
+
   date: { type: Date, default: Date.now },
   isPublished: Boolean,
-  price: Number,
+  price: {
+    type: Number,
+    required: function () {
+      return this.isPublished;
+    },
+    min: 10,
+    max: 100,
+    get: (v) => Math.round(v),
+    set: (v) => Math.round(v),
+  },
 });
 
 const Course = mongoose.model("Course", courseSchema);
 
+//**************************************************CREATING COURSE******************************************************************* */
 // function for inserting new courses to mongodb database
 async function createCourse(newCourse) {
   // pass new course object in this function
   const course = new Course(newCourse);
-
-  const result = await course.save();
-  console.log(result);
+  try {
+    const result = await course.save();
+    console.log(result);
+  } catch (err) {
+    for (field in err.errors) {
+      console.log(`${err.errors[field].message}`);
+    }
+  }
 }
+
+// *************************************************GETTING ALL THE COURSES********************************************************************
 
 // getting all the courses from the mongodb database
 async function getCourses() {
@@ -42,6 +82,8 @@ async function queryCourse() {
     .select({ name: 1, tags: 1, author: 1 });
   console.log(result);
 }
+
+// ***********************************************COMPARISON QUERY******************************************************************
 
 //Comparison query and logical query
 
@@ -68,6 +110,8 @@ async function advQuery() {
   console.log(result);
 }
 
+//***************************************************QUERY USING REGULAR EXPRESSION*********************************************** */
+
 // Query using regular expression
 async function regExQuery() {
   // const result = await Course.find({ author: /^Ravi/i }); //Name starts with ravi and i denotes here case insenstive
@@ -78,16 +122,19 @@ async function regExQuery() {
   console.log(result);
 }
 
+// ***************************************************CALLING FUNCTIONS*************************************************************
 const course = {
-  name: "Mevn stack",
-  author: "Brad Traversy",
-  tags: ["Full stack Developer", "Backend Developer", "frontend Developer"],
+  name: "Lets make code beutiful",
+  category: "MOBILE",
+  author: "Sachin Bhandari",
+  tags: ["LPU", "JavaScript geek", "Genius"],
+
   isPublished: true,
-  price: 1800,
+  price: 10.65,
 };
 
-// createCourse(course);
+createCourse(course);
 // getCourses();
 // queryCourse();
 // advQuery();
-regExQuery();
+// regExQuery();
